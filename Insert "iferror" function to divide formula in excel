@@ -1,0 +1,13 @@
+
+' Use this procedure and run each sheet.
+' This procedure will check each formula is divided equation and iferror command not present in each formula.
+
+Sub InsertIFERROR()
+    Dim R As Range
+    For Each R In Selection.SpecialCells(xlCellTypeFormulas)
+        If InStr(R.Formula, "/") > 0 And InStr(UCase(R.Formula), "IFERROR") = 0 Then
+            R.Formula = "=IFERROR(" & Mid(R.Formula, 2) & ","""")"
+        End If
+    Next R
+End Sub
+
