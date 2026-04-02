@@ -1,0 +1,69 @@
+Overview
+In data engineering workflows, we often encounter "Sharded Sheets"—datasets where each month or brand is separated into its own tab. Manually merging 100+ sheets is inefficient and prone to errors.
+
+This guide demonstrates how to use the Power of 3D-Referencing combined with the VSTACK and FILTER functions to consolidate hundreds of sheets into a single "Master Data" view using just one formula.
+
+The Problem
+Imagine you have a workbook with 120+ sheets named by Brand_Year_Month.
+
+B1_Lumina_2024_01
+
+B1_Lumina_2024_02
+
+...
+
+B1_Solaris_2024_12
+
+Traditional VSTACK requires listing every single sheet name, which is hit by the character limit and is a nightmare to maintain.
+
+The Solution: 3D-Range Formula
+Instead of listing every sheet, we use the "Start:End" syntax. This tells Excel to grab every sheet sitting between two specific tabs.
+
+📝 The Master Formula
+Excel
+=LET(
+    rawData, VSTACK('B1_Lumina_2024_01:B1_Zenith_2024_12'!A2:I500),
+    FILTER(rawData, CHOOSECOLS(rawData, 1) <> "")
+)
+Breakdown of the Logic:
+'StartSheet:EndSheet'!Range: This is the "3D" part. It treats the tabs like a deck of cards. As long as your sheets are physically ordered between Lumina_01 and Zenith_12, Excel will suck them all into the stack.
+
+VSTACK(...): Vertically appends the arrays from every sheet.
+
+LET(rawData, ...): We define a variable to keep the formula clean and performant.
+
+FILTER(..., CHOOSECOLS(..., 1) <> ""): Since we selected up to row 500 for each sheet, many rows might be empty. This step removes null rows based on the first column (Primary Key/ID) so your master list is clean.
+
+⚠️ Pro-Tips for Data Integrity:
+Sheet Order Matters: The 3D-reference depends on the physical position of the tabs. Ensure your "Start" and "End" sheets wrap around the data you want to include.
+
+Schema Consistency: All sheets must follow the same schema (Columns A to I). If one sheet has an extra column, the stack will misalign.
+
+Single Quotes: Always wrap sheet names in single quotes ('SheetName') if the names contain spaces or special characters (like parentheses).
+
+Implementation Example (Anonymized Brands)
+If your workbook contains these brands:
+
+Lumina (Premium Skincare)
+
+Apex Gear (Apparel)
+
+Nova Tech (Electronics)
+
+Zenith (Footwear)
+
+Your consolidated formula would look like this:
+
+Excel
+=FILTER(
+    VSTACK('B1_Lumina_2024_01:B1_Zenith_2024_12'!A2:I500), 
+    INDEX(VSTACK('B1_Lumina_2024_01:B1_Zenith_2024_12'!A2:A500), , 1) <> ""
+)
+Why use this over VBA?
+No Macro Security Issues: Works in standard .xlsx files.
+
+Real-time: The data updates instantly if you change a value in any sub-sheet.
+
+Low Maintenance: Adding a new month? Just drag the new sheet into the middle of the "wrapped" range, and the formula captures it automatically.
+
+This documentation is part of a series on "Modern Excel for Data Engineers". Feel free to star ⭐ the repo if this helped your workflow!
